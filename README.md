@@ -1,0 +1,1 @@
+# minimax-h3-image-h100-public-hopper
