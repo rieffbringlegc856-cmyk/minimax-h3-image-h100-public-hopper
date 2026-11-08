@@ -125,5 +125,10 @@ while true; do
     sleep 2
 done
 
+# Выводим в консоль предупреждения и ошибки импорта кастомных нод
+echo "=== Checking ComfyUI log for custom node errors ==="
+grep -iE "error|failed|cannot import|traceback" /workspace/comfyui.log || echo "No critical import errors found."
+echo "==================================================="
+
 # 5. Запуск RunPod Serverless Handler
 python -u rp_handler.py
