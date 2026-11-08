@@ -5,7 +5,6 @@ import numpy as np
 from PIL import Image
 import requests
 import torch
-import torchaudio
 
 # -------------------------------------------------------------
 # ЭМУЛЯЦИЯ / ДУБЛЕРЫ НОД: ComfyUI-Easy-Use
