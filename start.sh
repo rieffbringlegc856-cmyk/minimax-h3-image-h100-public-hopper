@@ -17,25 +17,27 @@ fi
 echo "Models linked status:"
 ls -la /workspace/ComfyUI/models || true
 
-# 1. Архитектура CUDA под NVIDIA H100 SXM (Hopper sm_90)
-export TORCH_CUDA_ARCH_LIST="9.0"
-export CUDA_ARCH="90"
+# Автоопределение архитектуры GPU (sm89 для L40/L40S/6000 Ada, sm90 для H100)
+GPU_ARCH=$(python3 -c 'import torch; c=torch.cuda.get_device_capability(); print(f"{c[0]}.{c[1]}")' 2>/dev/null || echo "8.9")
+GPU_SM=$(echo "$GPU_ARCH" | tr -d '.')
+
+export TORCH_CUDA_ARCH_LIST="8.9;9.0"
+export CUDA_ARCH="$GPU_SM"
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 
-# 2. Патч SageAttention под Hopper (sm90)
-python3 -c '
-path = "/workspace/ComfyUI/custom_nodes/ComfyUI-KJNodes/nodes/ltxv_nodes.py"
+python3 -c "
+path = '/workspace/ComfyUI/custom_nodes/ComfyUI-KJNodes/nodes/ltxv_nodes.py'
 try:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, 'r', encoding='utf-8') as f:
         code = f.read()
-    code = code.replace("if _cuda_archs is None:", "if False:")
-    code = code.replace("_cuda_archs[0]", "\"sm90\"")
-    with open(path, "w", encoding="utf-8") as f:
+    code = code.replace('if _cuda_archs is None:', 'if False:')
+    code = code.replace('_cuda_archs[0]', '\"sm${GPU_SM}\"')
+    with open(path, 'w', encoding='utf-8') as f:
         f.write(code)
-    print("Successfully patched Kijai SageAttention for sm90 (H100)!")
+    print('Successfully patched Kijai SageAttention for sm${GPU_SM}!')
 except Exception as e:
-    print(f"Patch warning: {e}")
-' || true
+    print(f'Patch warning: {e}')
+" || true
 
 # 3. Патч для Krea 2 Refiner (MXFP8) и безопасный запуск SageAttention
 python3 -c '
