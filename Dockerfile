@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg libgl1-mesa-glx git curl dos2unix build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+# Обновляем связку torch + torchvision + torchaudio (нужно для ComfyUI_LayerStyle и FP8)
+RUN pip install --no-cache-dir --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
 # ComfyUI
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
 
@@ -36,8 +39,8 @@ RUN git clone https://github.com/astropuzzo/ComfyUI-MiniMax-H3-Image-Studio.git
 RUN git clone https://github.com/Kvento/Comfyui_Minimax_h3_latent_Upscaler_ND.git
 RUN git clone https://github.com/mickmumpitz/ComfyUI-Mickmumpitz-Nodes.git
 
-# Установка зависимостей всех кастомных нод
-RUN for req in */requirements.txt; do [ -f "$req" ] && pip install --no-cache-dir -r "$req"; done
+# Установка зависимостей кастомных нод БЕЗ даунгрейда torch/transformers
+RUN for req in */requirements.txt; do [ -f "$req" ] && pip install --no-cache-dir --upgrade-strategy only-if-needed -r "$req" || true; done
 
 # S3 загрузчик ссылок и сплиттер
 RUN mkdir -p /workspace/ComfyUI/custom_nodes/MiniMax_S3_Loader
