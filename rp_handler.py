@@ -36,8 +36,9 @@ def ensure_comfyui_ready():
     elif os.path.exists("/runpod-volume/models"):
         os.system("rm -rf /workspace/ComfyUI/models && ln -s /runpod-volume/models /workspace/ComfyUI/models")
 
-    os.environ["TORCH_CUDA_ARCH_LIST"] = "9.0"
-    os.environ["CUDA_ARCH"] = "90"
+    major, minor = torch.cuda.get_device_capability() if torch.cuda.is_available() else (8, 9)
+    os.environ["TORCH_CUDA_ARCH_LIST"] = "8.9;9.0"
+    os.environ["CUDA_ARCH"] = f"{major}{minor}"
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
     try:
