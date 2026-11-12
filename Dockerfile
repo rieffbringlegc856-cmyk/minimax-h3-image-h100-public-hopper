@@ -7,15 +7,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg libgl1-mesa-glx git curl dos2unix build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Ставим torchaudio строго под родной PyTorch 2.4.0 базового образа (не повышая до 2.6!)
-RUN pip install --no-cache-dir torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu124
+# Обновляем связку torch + torchvision + torchaudio (нативный float8_e8m0fnu для Krea 2 + рабочий torchaudio)
+RUN pip install --no-cache-dir --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
 # ComfyUI
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
 
 WORKDIR /workspace/ComfyUI
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir runpod requests av triton boto3 pillow sageattention
+RUN pip install --no-cache-dir runpod requests av triton boto3 pillow
+
+# Компилируем SageAttention нативно под PyTorch 2.6 для Ada (8.9) и Hopper (9.0)
+ENV TORCH_CUDA_ARCH_LIST="8.9;9.0"
+RUN pip install --no-cache-dir --no-build-isolation git+https://github.com/thu-ml/SageAttention.git
 
 # Патчер comfy_kitchen
 COPY patch_kitchen.py /workspace/patch_kitchen.py
