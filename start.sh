@@ -57,11 +57,6 @@ try:
         code = f.read()
     if "torch.float8_e8m0fnu" in code:
         code = code.replace("torch.float8_e8m0fnu", "getattr(torch, \"float8_e8m0fnu\", torch.uint8)")
-    old_round = "return _ck_stochastic_rounding_fp8(value, rng, dtype)"
-    new_round = "return value.to(dtype) if hasattr(value, \"to\") else _ck_stochastic_rounding_fp8(value, rng, dtype)"
-    if old_round in code:
-        code = code.replace(old_round, new_round)
-        print("Successfully replaced stochastic_rounding with fast native cast!")
     with open(float_path, "w", encoding="utf-8") as f:
         f.write(code)
     print("Successfully patched comfy/float.py!")
