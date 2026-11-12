@@ -53,7 +53,7 @@ def ensure_comfyui_ready():
     print("=== [INIT] Starting ComfyUI process in background (Fast H100 VRAM mode)... ===", flush=True)
     log_file = open(LOG_PATH, "w", encoding="utf-8")
     proc = subprocess.Popen(
-        ["python", "-u", "main.py", "--listen", "127.0.0.1", "--port", "8188", "--disable-dynamic-vram"],
+        ["python", "-u", "main.py", "--listen", "127.0.0.1", "--port", "8188"],
         cwd="/workspace/ComfyUI",
         stdout=log_file,
         stderr=subprocess.STDOUT
