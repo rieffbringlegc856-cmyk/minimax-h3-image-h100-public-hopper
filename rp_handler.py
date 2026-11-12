@@ -313,6 +313,7 @@ def handler(event):
     # 11. Настройка внимания и бэкендов
     if "9598:9121" in wf and "inputs" in wf["9598:9121"]:
         wf["9598:9121"]["inputs"]["sage_attention"] = "auto"
+        wf["9598:9121"]["inputs"]["patch_cublaslinear"] = True
 
     if "9598:9712" in wf and "inputs" in wf["9598:9712"]:
         wf["9598:9712"]["inputs"]["attention"] = "original"
