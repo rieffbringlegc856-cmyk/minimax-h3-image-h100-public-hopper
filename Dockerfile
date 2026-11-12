@@ -15,11 +15,8 @@ RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
 
 WORKDIR /workspace/ComfyUI
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir runpod requests av triton boto3 pillow
-
-# Компилируем SageAttention нативно под PyTorch 2.6 для Ada (8.9) и Hopper (9.0)
-ENV TORCH_CUDA_ARCH_LIST="8.9;9.0"
-RUN pip install --no-cache-dir --no-build-isolation git+https://github.com/thu-ml/SageAttention.git
+# ВАЖНО: не указываем здесь triton, чтобы не перезаписать родной triton от PyTorch!
+RUN pip install --no-cache-dir runpod requests av boto3 pillow sageattention
 
 # Патчер comfy_kitchen
 COPY patch_kitchen.py /workspace/patch_kitchen.py
