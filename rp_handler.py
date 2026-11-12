@@ -49,7 +49,7 @@ def ensure_comfyui_ready():
     except Exception:
         pass
 
-    print("=== [INIT] Starting ComfyUI process in background (H100 VRAM mode)... ===", flush=True)
+    print("=== [INIT] Starting ComfyUI process in background (Fast H100 VRAM mode)... ===", flush=True)
     log_file = open(LOG_PATH, "w", encoding="utf-8")
     proc = subprocess.Popen(
         ["python", "-u", "main.py", "--listen", "127.0.0.1", "--port", "8188"],
@@ -164,8 +164,15 @@ def handler(event):
     krea_steps = int(job_input.get("krea_refiner_steps", 4))
     krea_seed = int(job_input.get("krea_seed", seed))
     krea_scale_by = float(job_input.get("krea_scale_by", 1.0))
-    krea_color_match = float(job_input.get("krea_color_match", 0.6))
+    krea_color_match = float(job_input.get("krea_color_match", 0.3))
     krea_keep_likeness = bool(job_input.get("krea_keep_likeness", False))
+    
+    # Считываем параметр "LoRA сходства" с фронтенда (любой из возможных ключей)
+    raw_krea_lora = job_input.get("krea_lora_strength", 
+                    job_input.get("krea_identity_strength", 
+                    job_input.get("krea_lora", 
+                    job_input.get("lora_likeness", 0.9))))
+    krea_lora_strength = float(raw_krea_lora)
 
     user_id = str(job_input.get("user_id", "1")).strip()
     image_urls = job_input.get("image_urls", [])
@@ -250,6 +257,7 @@ def handler(event):
     if "9835:9849" in wf and "inputs" in wf["9835:9849"]:
         wf["9835:9849"]["inputs"]["switch"] = krea_keep_likeness
 
+    # Переключатель выхода: Krea 2 или чистый MiniMax
     if not enable_krea and "8" in wf and "inputs" in wf["8"]:
         wf["8"]["inputs"]["images"] = ["9644", 0]
 
@@ -257,7 +265,52 @@ def handler(event):
     if "3" in wf and "inputs" in wf["3"]:
         wf["3"]["inputs"]["image_urls"] = json.dumps(image_urls) if isinstance(image_urls, list) else image_urls
 
-    # 9. Настройка внимания и бэкендов
+    # 9. Цепочка LoRA для MiniMax H3
+    minimax_loras = job_input.get("loras", [])
+    DUMMY_LORA = "cinematic_fantasy.safetensors"
+
+    for slot_idx in range(1, 5):
+        slot_node_id = f"9657:{slot_idx}"
+        if slot_node_id in wf and "inputs" in wf[slot_node_id]:
+            if slot_idx <= len(minimax_loras):
+                lora_item = minimax_loras[slot_idx - 1]
+                lora_name = str(lora_item.get("name") or lora_item.get("file") or "").strip()
+                if lora_name and not lora_name.endswith(".safetensors"):
+                    lora_name += ".safetensors"
+                strength = float(lora_item.get("strength", 0.8))
+
+                wf[slot_node_id]["inputs"]["lora_name"] = lora_name
+                wf[slot_node_id]["inputs"]["strength_model"] = strength
+            else:
+                wf[slot_node_id]["inputs"]["lora_name"] = DUMMY_LORA
+                wf[slot_node_id]["inputs"]["strength_model"] = 0.0
+
+    # 10. LoRA для Krea 2 (Параметр "LoRA сходства")
+    krea_loras = job_input.get("krea_loras", [])
+    if "9787" in wf and "inputs" in wf["9787"]:
+        if krea_loras:
+            for idx, lora_item in enumerate(krea_loras, start=1):
+                lora_name = str(lora_item.get("name") or lora_item.get("file") or "").strip()
+                if not lora_name:
+                    continue
+                if not lora_name.endswith(".safetensors"):
+                    lora_name += ".safetensors"
+                strength = float(lora_item.get("strength", 0.9))
+                wf["9787"]["inputs"][f"lora_{idx}"] = {
+                    "on": True,
+                    "lora": lora_name,
+                    "strength": strength
+                }
+        else:
+            # Активируем базовую LoRA сходства Krea 2 со значением с сайта
+            is_active = enable_krea and (krea_lora_strength > 0.0)
+            wf["9787"]["inputs"]["lora_1"] = {
+                "on": is_active,
+                "lora": "Krea2/krea2_identity_edit_v1_2.safetensors",
+                "strength": krea_lora_strength
+            }
+
+    # 11. Настройка внимания и бэкендов
     if "9598:9121" in wf and "inputs" in wf["9598:9121"]:
         wf["9598:9121"]["inputs"]["sage_attention"] = "auto"
 
