@@ -45,8 +45,6 @@ try:
         code = f.read()
     if "torch.float8_e8m0fnu" in code:
         code = code.replace("torch.float8_e8m0fnu", "getattr(torch, \"float8_e8m0fnu\", torch.uint8)")
-    if "scale=\"recalculate\"" in code:
-        code = code.replace("scale=\"recalculate\"", "scale=None")
     with open(ops_path, "w", encoding="utf-8") as f:
         f.write(code)
     print("Successfully patched comfy/ops.py!")
@@ -102,7 +100,7 @@ except Exception as e:
 
 # 4. Запуск ComfyUI в фоне (БЕЗ --novram, все модели остаются в 80GB VRAM H100)
 cd /workspace/ComfyUI
-python -u main.py --listen 127.0.0.1 --port 8188 > /workspace/comfyui.log 2>&1 &
+python -u main.py --listen 127.0.0.1 --port 8188 --disable-dynamic-vram > /workspace/comfyui.log 2>&1 &
 COMFY_PID=$!
 
 echo "Waiting for ComfyUI and custom nodes to initialize (PID: $COMFY_PID)..."
