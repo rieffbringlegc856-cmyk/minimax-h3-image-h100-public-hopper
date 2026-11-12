@@ -205,7 +205,7 @@
       "end_at_step": 10000,
       "return_with_leftover_noise": "disable",
       "model": [
-        "9616",
+        "9643:9347",
         0
       ],
       "positive": [
@@ -368,7 +368,7 @@
       "end_at_step": 10000,
       "return_with_leftover_noise": "disable",
       "model": [
-        "9616",
+        "9643:9347",
         0
       ],
       "positive": [
@@ -468,6 +468,62 @@
       "title": "Image Exists"
     }
   },
+  "9657:1": {
+    "inputs": {
+      "lora_name": "None",
+      "strength_model": 0.0,
+      "model": [
+        "9616",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "MiniMax LoRA Slot 1"
+    }
+  },
+  "9657:2": {
+    "inputs": {
+      "lora_name": "None",
+      "strength_model": 0.0,
+      "model": [
+        "9657:1",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "MiniMax LoRA Slot 2"
+    }
+  },
+  "9657:3": {
+    "inputs": {
+      "lora_name": "None",
+      "strength_model": 0.0,
+      "model": [
+        "9657:2",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "MiniMax LoRA Slot 3"
+    }
+  },
+  "9657:4": {
+    "inputs": {
+      "lora_name": "None",
+      "strength_model": 0.0,
+      "model": [
+        "9657:3",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "MiniMax LoRA Slot 4"
+    }
+  },
   "9669": {
     "inputs": {
       "Xi": 20,
@@ -538,6 +594,27 @@
     "class_type": "mxSlider",
     "_meta": {
       "title": "Krea 2 Refiner Steps"
+    }
+  },
+  "9787": {
+    "inputs": {
+      "PowerLoraLoaderHeaderWidget": {
+        "type": "PowerLoraLoaderHeaderWidget"
+      },
+      "lora_1": {
+        "on": false,
+        "lora": "Krea2/krea2_identity_edit_v1_2.safetensors",
+        "strength": 0.9
+      },
+      "➕ Add Lora": "",
+      "model": [
+        "9749:164",
+        0
+      ]
+    },
+    "class_type": "Power Lora Loader (rgthree)",
+    "_meta": {
+      "title": "Krea 2 Loras"
     }
   },
   "9791": {
@@ -618,11 +695,11 @@
         0
       ]
     },
-    "class_type": "MinimaxH3LatentUpscaler3D",
-    "_meta": {
-      "title": "MiniMax H3 Latent Upscaler 3D"
-    }
-  },
+  "class_type": "MinimaxH3LatentUpscaler3D",
+  "_meta": {
+    "title": "MiniMax H3 Latent Upscaler 3D"
+  }
+},
   "9664:9665": {
     "inputs": {
       "item_0": [
@@ -978,6 +1055,37 @@
       "title": "vae_video"
     }
   },
+  "9643:9347": {
+    "inputs": {
+      "switch": false,
+      "on_false": [
+        "9657:4",
+        0
+      ],
+      "on_true": [
+        "9643:9348",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch"
+    }
+  },
+  "9643:9348": {
+    "inputs": {
+      "lora_name": "MiniMax/minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "strength_model": 0.85,
+      "model": [
+        "9657:4",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
   "9749:164": {
     "inputs": {
       "model_name": "Krea2/krea2_turbo_mxfp8.safetensors",
@@ -1203,7 +1311,7 @@
     "inputs": {
       "switch": false,
       "on_false": [
-        "9749:164",
+        "9787",
         0
       ],
       "on_true": [
@@ -1222,7 +1330,7 @@
       "ref_boost_a": 0.1,
       "fit_mode": "fit",
       "model": [
-        "9749:164",
+        "9787",
         0
       ],
       "source_latent": [
