@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg libgl1-mesa-glx git curl dos2unix build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Обновляем связку torch + torchvision + torchaudio (нужно для ComfyUI_LayerStyle и FP8)
-RUN pip install --no-cache-dir --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+# Ставим torchaudio строго под родной PyTorch 2.4.0 базового образа (не повышая до 2.6!)
+RUN pip install --no-cache-dir torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu124
 
 # ComfyUI
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
