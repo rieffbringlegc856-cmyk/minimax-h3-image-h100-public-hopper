@@ -98,20 +98,33 @@ mp_path = "/workspace/ComfyUI/comfy/model_patcher.py"
 try:
     with open(mp_path, "r", encoding="utf-8") as f:
         code = f.read()
+    
     target = "class ModelPatcherDynamic(ModelPatcher):"
     replacement = (
         "class ModelPatcherDynamic(ModelPatcher):\n"
-        "    def is_dynamic(self):\n"
+        "    def __init__(self, *args, **kwargs):\n"
+        "        super().__init__(*args, **kwargs)\n"
         "        m_str = str(getattr(self, \"model\", \"\")) + str(type(getattr(self, \"model\", \"\")))\n"
         "        if \"Krea\" in m_str or \"Flux\" in m_str:\n"
-        "            return False\n"
-        "        return super().is_dynamic()\n"
+        "            self.is_dynamic = lambda: False\n"
     )
-    if target in code and "if \"Krea\" in m_str" not in code:
+    
+    weight_patch_override = (
+        "    def patch_weight_to_device(self, weight, device=None, inplace_update=False):\n"
+        "        if weight.dtype == torch.uint8:\n"
+        "            weight = weight.to(torch.bfloat16)\n"
+        "        return super().patch_weight_to_device(weight, device, inplace_update)\n"
+    )
+    
+    if target in code and "self.is_dynamic = lambda: False" not in code:
         code = code.replace(target, replacement, 1)
-        with open(mp_path, "w", encoding="utf-8") as f:
-            f.write(code)
-        print("Successfully disabled Dynamic VRAM specifically for Krea2/Flux!")
+    
+    if "def patch_weight_to_device(" not in code:
+        code = code.replace("class ModelPatcher:", "class ModelPatcher:\n" + weight_patch_override, 1)
+        
+    with open(mp_path, "w", encoding="utf-8") as f:
+        f.write(code)
+    print("Successfully patched model_patcher for MXFP8 precision!")
 except Exception as e:
     print(f"MP patch warning: {e}")
 ' || true
