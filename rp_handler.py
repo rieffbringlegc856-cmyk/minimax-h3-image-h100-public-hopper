@@ -20,6 +20,19 @@ except Exception:
 if not hasattr(torch, "float8_e8m0fnu"):
     torch.float8_e8m0fnu = torch.uint8
 
+# Принудительный подъем точности для Krea 2 Refiner, чтобы убрать эффект "пластиковой" кожи
+import comfy.model_patcher
+_orig_patch_weight = comfy.model_patcher.ModelPatcher.patch_weight_to_device
+
+def _patched_weight_to_device(self, weight, device=None, inplace_update=False):
+    # Если модель относится к Krea 2 и использует эмулированный/усеченный тип, переводим в bfloat16
+    m_str = str(getattr(self, "model", "")) + str(type(getattr(self, "model", "")))
+    if "Krea" in m_str and weight.dtype in [torch.uint8, torch.int8]:
+        weight = weight.to(torch.bfloat16)
+    return _orig_patch_weight(self, weight, device=device, inplace_update=inplace_update)
+
+comfy.model_patcher.ModelPatcher.patch_weight_to_device = _patched_weight_to_device
+
 COMFY_URL = "http://127.0.0.1:8188"
 LOG_PATH = "/workspace/comfyui.log"
 COMFY_OUTPUT_DIR = "/workspace/ComfyUI/output"
