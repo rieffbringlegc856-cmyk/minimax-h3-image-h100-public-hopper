@@ -7,8 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg libgl1-mesa-glx git curl dos2unix build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Обновляем связку torch + torchvision + torchaudio (нативный float8_e8m0fnu для Krea 2 + рабочий torchaudio)
-RUN pip install --no-cache-dir --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+# НЕ обновляем torch до 2.6 (чтобы не ломать быстрые ядра comfy_kitchen для int8_convrot!),
+# а доставляем совместимый torchaudio==2.4.0 для ComfyUI_LayerStyle:
+RUN pip install --no-cache-dir torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu124
 
 # ComfyUI
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
