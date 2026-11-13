@@ -94,29 +94,26 @@ try:
 except Exception as e:
     print(f"Sitecustomize warning: {e}")
 
-mm_path = "/workspace/ComfyUI/comfy/model_management.py"
+mp_path = "/workspace/ComfyUI/comfy/model_patcher.py"
 try:
-    with open(mm_path, "r", encoding="utf-8") as f:
+    with open(mp_path, "r", encoding="utf-8") as f:
         code = f.read()
-    patch_fn = (
-        "def load_models_gpu(models, memory_required=0, force_patch_weights=False, minimum_memory_required=None, force_full_load=False):\n"
-        "    for m in models:\n"
-        "        m_str = str(getattr(m, \"model\", \"\")) + str(type(getattr(m, \"model\", \"\")))\n"
+    target = "class ModelPatcherDynamic(ModelPatcher):"
+    replacement = (
+        "class ModelPatcherDynamic(ModelPatcher):\n"
+        "    def is_dynamic(self):\n"
+        "        m_str = str(getattr(self, \"model\", \"\")) + str(type(getattr(self, \"model\", \"\")))\n"
         "        if \"Krea\" in m_str or \"Flux\" in m_str:\n"
-        "            force_patch_weights = True\n"
-        "            force_full_load = True\n"
-        "            if hasattr(m, \"dynamic_vram\"):\n"
-        "                m.dynamic_vram = False\n"
-        "    return _orig_load_models_gpu(models, memory_required, force_patch_weights, minimum_memory_required, force_full_load)\n\n"
-        "def _orig_load_models_gpu("
+        "            return False\n"
+        "        return super().is_dynamic()\n"
     )
-    if "def load_models_gpu(" in code and "_orig_load_models_gpu" not in code:
-        code = code.replace("def load_models_gpu(", patch_fn, 1)
-        with open(mm_path, "w", encoding="utf-8") as f:
+    if target in code and "if \"Krea\" in m_str" not in code:
+        code = code.replace(target, replacement, 1)
+        with open(mp_path, "w", encoding="utf-8") as f:
             f.write(code)
-        print("Successfully forced full weight patching for Krea2/Flux!")
+        print("Successfully disabled Dynamic VRAM specifically for Krea2/Flux!")
 except Exception as e:
-    print(f"MM patch warning: {e}")
+    print(f"MP patch warning: {e}")
 ' || true
 
 # 4. Запуск ComfyUI в фоне (БЕЗ --novram, все модели остаются в 80GB VRAM H100)
