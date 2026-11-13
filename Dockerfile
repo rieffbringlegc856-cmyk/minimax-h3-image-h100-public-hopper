@@ -7,9 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg libgl1-mesa-glx git curl dos2unix build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# НЕ обновляем torch до 2.6 (чтобы не ломать быстрые ядра comfy_kitchen для int8_convrot!),
-# а доставляем совместимый torchaudio==2.4.0 для ComfyUI_LayerStyle:
-RUN pip install --no-cache-dir torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu124
+# Фиксируем родной стек PyTorch 2.4.0 ПОСЛЕ всех нод, чтобы ни одна нода его не перезаписала
+RUN pip install --no-cache-dir --force-reinstall torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu124
 
 # ComfyUI
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
